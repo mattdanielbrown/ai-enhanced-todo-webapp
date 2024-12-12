@@ -1,14 +1,17 @@
 import {Component, signal} from '@angular/core';
-import {MatFabButton, MatIconButton} from '@angular/material/button';
+import {MatButton, MatFabButton, MatIconButton} from '@angular/material/button';
 import {MatCheckbox} from '@angular/material/checkbox';
 import {MatIcon} from '@angular/material/icon';
 import {MatList, MatListItem} from '@angular/material/list';
 import {NavComponent} from './nav/nav.component';
 import {type Todo} from './todo';
+import {MatFormField, MatLabel} from '@angular/material/form-field';
+import {MatInput} from '@angular/material/input';
+import {MatProgressBar} from '@angular/material/progress-bar';
 
 @Component({
   selector: 'app-root',
-  imports: [NavComponent, MatFabButton, MatIcon, MatIconButton, MatList, MatListItem, MatCheckbox],
+  imports: [NavComponent, MatFabButton, MatIcon, MatIconButton, MatLabel, MatList, MatListItem, MatCheckbox, MatFormField, MatInput, MatButton],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
@@ -18,6 +21,7 @@ export class AppComponent {
     {text: 'Wash my car', done: true},
     {text: 'Pet the dog', done: false},
   ]);
+  protected readonly reply = signal('');
 
   addTodo() {
     const text = prompt('Enter a new todo.');
@@ -34,5 +38,26 @@ export class AppComponent {
 
   toggleTodo(todo: Todo) {
     this.todos.update(todos => todos.map(t => t !== todo ? t : {...t, done: !t.done}));
+  }
+
+  async runPrompt(userPrompt: string) {
+    if (self?.ai?.languageModel == null) {
+      alert('Prompt API is not available in this browser.');
+      return;
+    }
+
+    this.reply.set('…');
+
+    const systemPrompt = `
+      The user will ask questions about their todo list.
+      Here's the user's todo list:
+      ${this.todos().map(todo => `* ${todo.text} (${todo.done ? 'done' : 'not done'})`).join('\n')}`;
+    const session = await self.ai.languageModel.create({
+      systemPrompt,
+    });
+    const stream = session.promptStreaming(userPrompt);
+    for await (const chunk of stream) {
+      this.reply.set(chunk);
+    }
   }
 }

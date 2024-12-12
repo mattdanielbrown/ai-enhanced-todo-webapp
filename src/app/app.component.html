@@ -15,6 +15,20 @@
     }
   </mat-list>
 
+  <pre>{{ reply() }}</pre>
+
+  <div class="chat-container">
+    <mat-form-field>
+      <mat-label>Prompt</mat-label>
+      <input matInput placeholder="Prompt" #prompt>
+    </mat-form-field>
+
+    <button mat-raised-button (click)="runPrompt(prompt.value)">
+      <mat-icon>send</mat-icon>
+      Ask
+    </button>
+  </div>
+
   <button mat-fab (click)="addTodo()">
     <mat-icon>add</mat-icon>
   </button>
